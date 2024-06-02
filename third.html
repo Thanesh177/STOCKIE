@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Website</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style2.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{url_for('static', filename='app.js')}}"></script>
+
+</head>
+<body>
+    <div class="third" style="color: black;">
+        hjvfbhdv
+        </>
+        {% for prediction in predictions %}
+            <p>Prediction: {{ prediction }}</p>
+        {% endfor %}
+    </div>    
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style2.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Second Page</title>
+</head>
+<body>
+    <nav class="navbar">
+        <ul>
+            <li><a href="#stock">Summary</a></li>
+            <li><a href="#news">News</a></li>
+            <li><a href="#chart">Chart</a></li>
+            <li><a href="#prediction">Prediction</a></li>
+        </ul>
+    </nav>
+
+    <section id="stock">
+        <div class="main">
+            <table>
+                <thead>
+                    <tr>
+                        <th><h1>Summary</h1></th>
+                        <th><h1>Info</h1></th>
+                    </tr>
+                </thead>
+                <tbody id="stock_data_body">
+                    {% for index in range(stock_data|length) %}
+                    <tr>
+                        <td>
+                            <br>
+                            {{ stock_data[index] }}</td>
+                        <td>
+                            {% for item in s[index] %}
+                                {{ item }}
+                                <br>
+                                <br>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        </section>
+
+        <section id="news">
+            <div class="main2">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><h1>News</h1></th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock_data_body">
+                        {% for num in range(1, 101) %}
+                        <tr>
+                            <td>
+                                <br>
+                                {{ news[0][num] }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+            </div>
+        </section>
+
+
+        <section id="prediction">
+
+            <div>
+                <div class="image-container">
+                    <img src="data:image/png;base64,{{ plot_data }}" alt="Stock Prices Plot">
+                </div>   
+                <div class="third" style="color: black;">
+                    </>
+                    {% for prediction in predictions %}
+                        <p class="pre">AI Prediction for the next Day: {{ prediction }}</p>
+                        <p class="pree">Disclaimer: The prediction shown here might be wrong, so don't take any deceitions only based on this data</p>
+                    {% endfor %}
+                </div>   
+            </div>   
+        </section>     
+</body>
+</html>
