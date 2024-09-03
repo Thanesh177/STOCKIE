@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, jsonify, request
 import pandas as pd
 import requests
@@ -22,40 +23,43 @@ from keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 
 app = Flask(__name__)
-        
-#prediction
-company = 'SHOP'
-start = dt.datetime(2012, 1, 1)
-end = dt.datetime(2020, 1, 1)
+    
 
-# Download historical stock data
-dataa = yf.download(tickers=[company], start=start, end=end)
+def fetch_stock_data(ticker):
+    # Download historical stock data
+    start = dt.datetime(2012, 1, 1)
+    end = dt.datetime.now()  # Set end date to the current day
+    data = yf.download(tickers=[ticker], start=start, end=end)
+    return data
 
-scaler = MinMaxScaler(feature_range=(0, 1))
+def make_prediction(ticker, prediction_day=30):
+    data = fetch_stock_data(ticker)
 
-scaled_data = scaler.fit_transform(dataa['Close'].values.reshape(-1, 1))
+    # Scaling the data
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    scaled_data = scaler.fit_transform(data['Close'].values.reshape(-1, 1))
 
-prediction_day = 30
+    # Prepare test data
+    test_start = dt.datetime(2020, 1, 1)
+    test_end = dt.datetime.now()
+    test_data = yf.download(tickers=[ticker], start=test_start, end=test_end)
+    actual_prices = test_data['Close'].values
 
-test_start = dt.datetime(2020, 1, 1)
-test_end = dt.datetime.now()
+    total_dataset = pd.concat((data['Close'], test_data['Close']), axis=0)
 
-test_data = yf.download(tickers=[company], start=test_start, end=test_end)
-actual_prices = test_data['Close'].values
+    model_inputs = total_dataset[len(total_dataset) - len(test_data) - prediction_day:].values
+    model_inputs = model_inputs.reshape(-1, 1)
+    model_inputs = scaler.transform(model_inputs)
 
-total_dataset = pd.concat((dataa['Close'], test_data['Close']), axis=0)
+    real_data = [model_inputs[len(model_inputs) - prediction_day:len(model_inputs), 0]]
+    real_data = np.array(real_data)
+    real_data = np.reshape(real_data, (real_data.shape[0], real_data.shape[1], 1))
 
+    # Make predictions
+    prediction = model.predict(real_data)
+    predicted_prices = scaler.inverse_transform(prediction)
 
-
-
-model_inputs = total_dataset[len(total_dataset) - len(test_data) - prediction_day:].values
-model_inputs = model_inputs.reshape(-1, 1)
-model_inputs = scaler.transform(model_inputs)
-
-real_data = [model_inputs[len(model_inputs) - prediction_day:len(model_inputs), 0]]  # Adjusted indexing
-real_data = np.array(real_data)
-real_data = np.reshape(real_data, (real_data.shape[0], real_data.shape[1], 1))
-
+    return actual_prices, predicted_prices
 
 #page 2
 def web_div(web_content, class_path):
@@ -69,7 +73,7 @@ def web_div(web_content, class_path):
 
 
 def summary(stock_code):
-    url = 'https://ca.finance.yahoo.com/quote/META/profile'
+    url = f'https://ca.finance.yahoo.com/quote/{stock_code}/profile'
     headers = {
     'User-agent': 'Mozilla/5.0',
     }
@@ -98,22 +102,21 @@ def web(web_content, class_path):
 
 
 def event(stock_code):
-    url = 'https://ca.finance.yahoo.com/quote/META/profile'
+    url = f'https://ca.finance.yahoo.com/quote/{stock_code}/profile'  # Correctly format the URL
     headers = {
-    'User-agent': 'Mozilla/5.0',
+        'User-agent': 'Mozilla/5.0',
     }
     try:
         r = requests.get(url, headers=headers)
         web_content = BeautifulSoup(r.text, 'html.parser')
         texts = web(web_content, 'Pb(30px) smartphone_Px(20px)')
-        if texts != []:
+        if texts:
             summ = texts[0]
             summ = summ.split(':')
-
         else:
-            summ = []
+            summ = ["nill"]  # Handle case where no data is found
     except ConnectionError:
-        summ = None
+        summ = ["nill"]  # Handle case where the request fails
 
     return summ
 
@@ -152,22 +155,58 @@ def data(stock_code):
     return summ
 
 
+def predict_prices(company):
+
+    start = dt.datetime(2012, 1, 1)
+    end = dt.datetime.now()  # Set end date to the current day
+
+    # Download historical stock data
+    dataa = yf.download(tickers=[company], start=start, end=end)
+
+    scaler = MinMaxScaler(feature_range=(0, 1))
+
+    scaled_data = scaler.fit_transform(dataa['Close'].values.reshape(-1, 1))
+
+    prediction_day = 30
+
+    test_start = dt.datetime(2020, 1, 1)
+    test_end = dt.datetime.now()
+
+    test_data = yf.download(tickers=[company], start=test_start, end=test_end)
+    actual_prices = test_data['Close'].values
+
+    total_dataset = pd.concat((dataa['Close'], test_data['Close']), axis=0)
+
+
+
+
+    model_inputs = total_dataset[len(total_dataset) - len(test_data) - prediction_day:].values
+    model_inputs = model_inputs.reshape(-1, 1)
+    model_inputs = scaler.transform(model_inputs)
+
+    real_data = [model_inputs[len(model_inputs) - prediction_day:len(model_inputs), 0]]  # Adjusted indexing
+    real_data = np.array(real_data)
+    real_data = np.reshape(real_data, (real_data.shape[0], real_data.shape[1], 1))
+
+    x_test = []
+    for x in range(prediction_day, len(model_inputs)):
+        x_test.append(model_inputs[x - prediction_day:x, 0])
+
+    x_test = np.array(x_test)
+    x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
+
+    predicted_prices = model.predict(x_test)
+
+# Inverse transform the predicted prices
+    predicted_prices = scaler.inverse_transform(predicted_prices)
+
+    return predicted_prices
+
+
+
 #model
 model = load_model('stoc.h5')
 
-
-x_test = []
-for x in range(prediction_day, len(model_inputs)):
-    x_test.append(model_inputs[x - prediction_day:x, 0])
-
-x_test = np.array(x_test)
-x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
-
-# Make predictions
-predicted_prices = model.predict(x_test)
-
-# Inverse transform the predicted prices
-predicted_prices = scaler.inverse_transform(predicted_prices)
 
 @app.route('/')
 def index():
@@ -177,44 +216,39 @@ def index():
 def middle():
     return render_template('mid.html')  
 
-@app.route('/second-page')
-def second_page():
-    stocks = ['META']
-    stock_data = []
-    s = []
-    news = []
-    predictions = []
 
-    for stock in stocks:
-        # Fetch summary data
-        stock_data.append(summary(stock))
-        
-        # Fetch event data
-        s.append(event(stock))
-        
-        # Fetch news data
-        news.append(data(stock))
-        
-        # Make predictions
-        prediction = model.predict(real_data)  # Make sure real_data is defined correctly
-        predictionn = scaler.inverse_transform(prediction)  # Assuming you're scaling back predictions
-        predictions.append(predictionn)
-    
-    # Plotting
-    plt.plot(actual_prices, color='black')
-    plt.plot(predicted_prices, color='green')
+@app.route('/new/<ticker>')
+def second_page(ticker):
+    # Make predictions
+    actual_prices, predicted_prices = make_prediction(ticker)
+    predict_price = predict_prices(ticker)
+
+    # Fetch additional data
+    stock_data = summary(ticker)
+    event_data = event(ticker)
+    news_data = data(ticker)
+
+    # Plotting the actual vs predicted prices
+    plt.figure(figsize=(10, 6))  # Optional: Set figure size
+    plt.plot(actual_prices, color='black', label='Actual Prices')
+    plt.plot(predict_price, color='green', label='Predicted Prices')
     plt.legend()
-    
+    plt.title(f'Price Prediction for {ticker}')
+    plt.xlabel('Time')
+    plt.ylabel('Price')
+    plt.grid(True)
+
     # Save plot to a BytesIO object
     buffer = BytesIO()
     plt.savefig(buffer, format='png')
     buffer.seek(0)
-    
+    plt.close()  # Close the plot to free up resources
+
     # Encode plot image to base64
     plot_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
-    
-    # Render the template with the fetched data and plot
-    return render_template('new.html', stock_data=stock_data, news=news, s=s, predictions=predictions, plot_data=plot_data)
+
+    # Render the template with the plot and prediction results
+    return render_template('new.html', stock_data=stock_data, news=news_data, s=event_data, predictions=predicted_prices, plot_data=plot_data)
 
 '''
 @app.route('/')
@@ -264,5 +298,4 @@ while (True):
     df.to_csv(str(time_stamp[0:11])+'stock data.csv', mode = 'a', header = False)
     print(col)
 '''
-
 
