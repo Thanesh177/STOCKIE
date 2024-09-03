@@ -26,20 +26,16 @@
                     </tr>
                 </thead>
                 <tbody id="stock_data_body">
-                    {% for index in range(stock_data|length) %}
                     <tr>
                         <td>
                             <br>
-                            {{ stock_data[index] }}</td>
+                            {{ stock_data }}</td>
                         <td>
-                            {% for item in s[index] %}
-                                {{ item }}
+                                {{ s }}
                                 <br>
                                 <br>
-                            {% endfor %}
                         </td>
                     </tr>
-                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -50,7 +46,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th><h1>News</h1></th>
+                            <th><h1>NEWS</h1></th>
                         </tr>
                     </thead>
                     <tbody id="stock_data_body">
@@ -58,7 +54,7 @@
                         <tr>
                             <td>
                                 <br>
-                                {{ news[0][num] }}
+                                {{ news[num] }}
                             </td>
                         </tr>
                         {% endfor %}
@@ -70,13 +66,11 @@
 
 
         <section id="prediction">
-
             <div>
                 <div class="image-container">
                     <img src="data:image/png;base64,{{ plot_data }}" alt="Stock Prices Plot">
                 </div>   
                 <div class="third" style="color: black;">
-                    </>
                     {% for prediction in predictions %}
                         <p class="pre">AI Prediction for the next Day: {{ prediction }}</p>
                         <p class="pree">Disclaimer: The prediction shown here might be wrong, so don't take any deceitions only based on this data</p>

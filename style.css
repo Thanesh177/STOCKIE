@@ -7,222 +7,448 @@ html{
     scroll-behavior: smooth;
 }
 
+@media (min-width: 769px) {
 
-/*HomeSection*/
+    /*HomeSection*/
 
-#home{
-display : flex;
-flex-direction : column;
-/* background-color: black;*/
-height: 743px;
-justify-content: center;
-align-items: center;
-background-color: rgb(0, 0, 0);
-}
-
-
-.input{ 
-    background-color: transparent;
-    width: 350px;
-    height: 50px;
-    font-size: 1.2rem;
-}
-
-
-.main{
-    position: relative;
-    display: inline-block;
-    width: 350px;
-    height: 50px;
-    border-radius: 20px;
-    font-size: 1.5rem;
-    letter-spacing: .1rem;
-    text-transform: uppercase;
-    background: black;
-    transition: .5s;
-    transition-delay: .5s;
-}
-
-
-.main:hover{
-    color: lightblue;
-    letter-spacing: .25rem;
-    text-shadow: 0 0 3px lightblue;
-    transition-delay: 1ms;
-}
-
-.main span{
-    position: absolute;
-    display: block;
-    background: rgb(173, 230, 194);
-    box-shadow: 0 0 30px lightblue;
-}
-
-.main span:nth-child(1){
-    left: 0;
-    top: 0;
-    width: 50.5%;
-    height: 1.5px;
-    transform: scaleX(0);
-    transition: transform .5s;
-    transform-origin: left;
-}
-
-.main:hover span:nth-child(1){
-    transform: scaleX(1);
-    transform-origin: right;
-}
-
-.main span:nth-child(2){
-    right: 0;
-    top: 0;
-    width: 50.5%;
-    height: 1.5px;
-    transform: scaleX(0);
-    transition: transform .5s;
-    transform-origin: right;
-}
-
-.main:hover span:nth-child(2){
-    transform: scaleX(1);
-    transform-origin: left;
-}
-
-.main span:nth-child(3){
-    right: 0;
-    top: 0;
-    width: 0.2%;
-    height: 100%;
-    transform: scaleY(0);
-    transition: transform .5s;
-    transition-delay: .3s;
-    transform-origin: bottom;
-
-}
-
-.main:hover span:nth-child(3){
-    transform: scaleY(1);
-    transform-origin: top;
-}
-
-.main span:nth-child(4){
-    left: 0;
-    top: 0;
-    width: 0.2%;
-    height: 100%;
-    transform: scaleY(0);
-    transition: transform .5s;
-    transition-delay: .3s;
-    transform-origin: bottom;
-
-}
-
-.main:hover span:nth-child(4){
-    transform: scaleY(1);
-    transform-origin: left;
-}
-
-.main span:nth-child(5){
-    left: 0;
-    bottom: 0;
-    width: 50.5%;
-    height: 1.5px;
-    transform: scaleX(0);
-    transition: transform .5s;
-    transform-origin: right;
-    transition-delay: .3s;
-}
-
-.main:hover span:nth-child(5){
-    transform: scaleX(1);
-    transform-origin: left;
-}
-
-.main span:nth-child(6){
-    right: 0;
-    bottom: 0;
-    width: 50.5%;
-    height: 1.5px;
-    transform: scaleX(0);
-    transition: transform .5s;
-    transition-delay: .3s;
-    transform-origin: left;
-
-}
-
-.main:hover span:nth-child(6){
-    transform: scaleX(1);
-    transform-origin: right;
-}
-
-th{
-    padding: 10px 18px;
-}
-
-.loading-screen{
-    position: fixed;
-    top: 0;
-    left: 0;
+    #home{
+    display : flex;
+    flex-direction : column;
+    /* background-color: black;*/
+    height: 1025px;
     width: 100%;
-    height: 100%;
-    background: black;
-    color: white;
-    pointer-events: none;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(11, 8, 8);
+    }
+
+
+    .input{ 
+        display: flex;
+        background-color: transparent;
+        font-size: 1.7rem;
+        color: white;
+    }
+
+
+    .main{
+        position: relative;
+        display: inline-block;
+        width: 350px;
+        height: 50px;
+        border-radius: 20px;
+        font-size: 1.5rem;
+        letter-spacing: .1rem;
+        text-transform: uppercase;
+        background: black;
+        transition: .5s;
+        transition-delay: .5s;
+        color: white;
+    }
+
+
+    .main:hover{
+        color: lightblue;
+        letter-spacing: .25rem;
+        text-shadow: 0 0 3px lightblue;
+        transition-delay: 1ms;
+    }
+
+    .main span{
+        position: absolute;
+        display: block;
+        background: rgb(173, 230, 194);
+        box-shadow: 0 0 30px lightblue;
+    }
+
+    .main span:nth-child(1){
+        left: 0;
+        top: 0;
+        width: 50.5%;
+        height: 1.5px;
+        transform: scaleX(0);
+        transition: transform .5s;
+        transform-origin: left;
+    }
+
+    .main:hover span:nth-child(1){
+        transform: scaleX(1);
+        transform-origin: right;
+    }
+
+    .main span:nth-child(2){
+        right: 0;
+        top: 0;
+        width: 50.5%;
+        height: 1.5px;
+        transform: scaleX(0);
+        transition: transform .5s;
+        transform-origin: right;
+    }
+
+    .main:hover span:nth-child(2){
+        transform: scaleX(1);
+        transform-origin: left;
+    }
+
+    .main span:nth-child(3){
+        right: 0;
+        top: 0;
+        width: 0.2%;
+        height: 100%;
+        transform: scaleY(0);
+        transition: transform .5s;
+        transition-delay: .3s;
+        transform-origin: bottom;
+
+    }
+
+    .main:hover span:nth-child(3){
+        transform: scaleY(1);
+        transform-origin: top;
+    }
+
+    .main span:nth-child(4){
+        left: 0;
+        top: 0;
+        width: 0.2%;
+        height: 100%;
+        transform: scaleY(0);
+        transition: transform .5s;
+        transition-delay: .3s;
+        transform-origin: bottom;
+
+    }
+
+    .main:hover span:nth-child(4){
+        transform: scaleY(1);
+        transform-origin: left;
+    }
+
+    .main span:nth-child(5){
+        left: 0;
+        bottom: 0;
+        width: 50.5%;
+        height: 1.5px;
+        transform: scaleX(0);
+        transition: transform .5s;
+        transform-origin: right;
+        transition-delay: .3s;
+    }
+
+    .main:hover span:nth-child(5){
+        transform: scaleX(1);
+        transform-origin: left;
+    }
+
+    .main span:nth-child(6){
+        right: 0;
+        bottom: 0;
+        width: 50.5%;
+        height: 1.5px;
+        transform: scaleX(0);
+        transition: transform .5s;
+        transition-delay: .3s;
+        transform-origin: left;
+
+    }
+
+    .main:hover span:nth-child(6){
+        transform: scaleX(1);
+        transform-origin: right;
+    }
+
+    th{
+        padding: 10px 18px;
+    }
+
+    .loading-screen{
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: black;
+        color: white;
+        pointer-events: none;
+    }
+
+    .counter{
+        position: fixed;
+        left: 30px;
+        bottom: 10px;
+        display: flex;
+        height: 30px;
+        font-size: 30px;
+        line-height: 52px;
+        clip-path: polygon(0 0, 100% 0, 100% 100px, 0 100px);
+        font-weight: 20;
+    }
+
+    .counter-1,
+    .counter-2,
+    .counter-3{
+        position: relative;
+        top: -5px;
+    }
+
+    .num1offset1{
+        position: relative;
+        right: -5px;
+    }
+
+    .num1offset2{
+        position: relative;
+        right: -5px;
+    }
+
+    .loader{
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 300px;
+        height: 50px;
+        transform: translate(-50%, -50%);
+        display: flex;
+        background: black;
+    }
+
+    .loader-1{
+        position: relative;
+        width: 200px;
+        background: white;
+    }
+
+    .loader-2{
+        position: relative;
+        width: 100px;
+        background: white;
+    }
+
+    .bar{
+        height: 35px;
+    }
+
 }
 
-.counter{
-    position: fixed;
-    left: 30px;
-    bottom: 10px;
-    display: flex;
-    height: 30px;
-    font-size: 30px;
-    line-height: 52px;
-    clip-path: polygon(0 0, 100% 0, 100% 100px, 0 100px);
-    font-weight: 20;
-}
+@media (max-width: 768px) {
+     /*HomeSection*/
 
-.counter-1,
-.counter-2,
-.counter-3{
-    position: relative;
-    top: -5px;
+     #home{
+        display : flex;
+        flex-direction : column;
+        /* background-color: black;*/
+        height: 1025px;
+        width: 100%;
+        justify-content: center;
+        align-items: center;
+        background-color: rgb(11, 8, 8);
+        }
+    
+    
+        .input{ 
+            display: flex;
+            background-color: transparent;
+            font-size: 1.7rem;
+            color: white;
+        }
+    
+    
+        .main{
+            position: relative;
+            display: inline-block;
+            width: 350px;
+            height: 50px;
+            border-radius: 20px;
+            font-size: 1.5rem;
+            letter-spacing: .1rem;
+            text-transform: uppercase;
+            background: black;
+            transition: .5s;
+            transition-delay: .5s;
+            color: white;
+        }
+    
+    
+        .main:hover{
+            color: lightblue;
+            letter-spacing: .25rem;
+            text-shadow: 0 0 3px lightblue;
+            transition-delay: 1ms;
+        }
+    
+        .main span{
+            position: absolute;
+            display: block;
+            background: rgb(173, 230, 194);
+            box-shadow: 0 0 30px lightblue;
+        }
+    
+        .main span:nth-child(1){
+            left: 0;
+            top: 0;
+            width: 50.5%;
+            height: 1.5px;
+            transform: scaleX(0);
+            transition: transform .5s;
+            transform-origin: left;
+        }
+    
+        .main:hover span:nth-child(1){
+            transform: scaleX(1);
+            transform-origin: right;
+        }
+    
+        .main span:nth-child(2){
+            right: 0;
+            top: 0;
+            width: 50.5%;
+            height: 1.5px;
+            transform: scaleX(0);
+            transition: transform .5s;
+            transform-origin: right;
+        }
+    
+        .main:hover span:nth-child(2){
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+    
+        .main span:nth-child(3){
+            right: 0;
+            top: 0;
+            width: 0.2%;
+            height: 100%;
+            transform: scaleY(0);
+            transition: transform .5s;
+            transition-delay: .3s;
+            transform-origin: bottom;
+    
+        }
+    
+        .main:hover span:nth-child(3){
+            transform: scaleY(1);
+            transform-origin: top;
+        }
+    
+        .main span:nth-child(4){
+            left: 0;
+            top: 0;
+            width: 0.2%;
+            height: 100%;
+            transform: scaleY(0);
+            transition: transform .5s;
+            transition-delay: .3s;
+            transform-origin: bottom;
+    
+        }
+    
+        .main:hover span:nth-child(4){
+            transform: scaleY(1);
+            transform-origin: left;
+        }
+    
+        .main span:nth-child(5){
+            left: 0;
+            bottom: 0;
+            width: 50.5%;
+            height: 1.5px;
+            transform: scaleX(0);
+            transition: transform .5s;
+            transform-origin: right;
+            transition-delay: .3s;
+        }
+    
+        .main:hover span:nth-child(5){
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+    
+        .main span:nth-child(6){
+            right: 0;
+            bottom: 0;
+            width: 50.5%;
+            height: 1.5px;
+            transform: scaleX(0);
+            transition: transform .5s;
+            transition-delay: .3s;
+            transform-origin: left;
+    
+        }
+    
+        .main:hover span:nth-child(6){
+            transform: scaleX(1);
+            transform-origin: right;
+        }
+    
+        th{
+            padding: 10px 18px;
+        }
+    
+        .loading-screen{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            color: white;
+            pointer-events: none;
+        }
+    
+        .counter{
+            position: fixed;
+            left: 30px;
+            bottom: 10px;
+            display: flex;
+            height: 30px;
+            font-size: 30px;
+            line-height: 52px;
+            clip-path: polygon(0 0, 100% 0, 100% 100px, 0 100px);
+            font-weight: 20;
+        }
+    
+        .counter-1,
+        .counter-2,
+        .counter-3{
+            position: relative;
+            top: -5px;
+        }
+    
+        .num1offset1{
+            position: relative;
+            right: -5px;
+        }
+    
+        .num1offset2{
+            position: relative;
+            right: -5px;
+        }
+    
+        .loader{
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300px;
+            height: 50px;
+            transform: translate(-50%, -50%);
+            display: flex;
+            background: black;
+        }
+    
+        .loader-1{
+            position: relative;
+            width: 200px;
+            background: white;
+        }
+    
+        .loader-2{
+            position: relative;
+            width: 100px;
+            background: white;
+        }
+    
+        .bar{
+            height: 35px;
+        }    
 }
-
-.num1offset1{
-    position: relative;
-    right: -5px;
-}
-
-.num1offset2{
-    position: relative;
-    right: -5px;
-}
-
-.loader{
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 300px;
-    height: 50px;
-    transform: translate(-50%, -50%);
-    display: flex;
-    background: black;
-}
-
-.loader-1{
-    position: relative;
-    width: 200px;
-    background: white;
-}
-
-.loader-2{
-    position: relative;
-    width: 100px;
-    background: white;
-}
-
-.bar{
-    height: 35px;
-}
-

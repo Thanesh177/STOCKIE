@@ -44,8 +44,8 @@ $(document).ready(function(){
     }); 
 
     $('#tickers-grid').on('click', '.detail', function(){
-        // Redirect to second.html
-        window.location.href = 'second-page';
+        var ticker = $(this).data('ticker');
+        window.location.href = '/new/' + ticker;
     });
 
     startUpdateCycle();
