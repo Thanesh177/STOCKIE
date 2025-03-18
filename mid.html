@@ -9,15 +9,18 @@
     <script src="{{url_for('static', filename='app.js')}}"></script>
 
 </head>
-<body>
-    <div class="midd">
-        <br>
-        <br>
-        <form id="add-ticker-form" class="form">
-            <label for="new-ticker"></label>
-            <input type="text" id="new-ticker" placeholder="Add stock" required class="in">
-        </form>
-        <div id="tickers-grid"></div>
-    </div>
-</body>
+    <body>
+        <div class="midd">
+            <br><br><br>
+
+            <!-- Form Section -->
+            <form id="add-ticker-form" class="form">
+                <label for="new-ticker"></label>
+                <input type="text" id="new-ticker" placeholder="Add stock" required class="in">
+            </form>
+
+            <!-- Grid Section for Stock Tickers -->
+            <div id="tickers-grid"></div>
+        </div>
+    </body>
 </html>

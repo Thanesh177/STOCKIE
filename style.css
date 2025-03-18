@@ -15,19 +15,35 @@ html{
     display : flex;
     flex-direction : column;
     /* background-color: black;*/
-    height: 1025px;
+    height: 100vh;
     width: 100%;
     justify-content: center;
     align-items: center;
     background-color: rgb(11, 8, 8);
     }
 
+    #new-ticker{
+        width: 350px;
+        height: 50px;
+        border-radius: 5px;
+        border: 2px solid #000000;
+        font-size: 1.5rem;
+    }
 
-    .input{ 
-        display: flex;
+
+    .input {
+        width: 350px;
+        border-radius: 5px;
         background-color: transparent;
-        font-size: 1.7rem;
-        color: white;
+        color: #ffffff;
+        outline: none;
+        transition: box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out;
+    }
+    
+    /* Glowing effect on focus */
+    .input:focus {
+        border-color: #1007c5;
+        box-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc, 0 0 40px #00ffcc;
     }
 
 
@@ -36,7 +52,7 @@ html{
         display: inline-block;
         width: 350px;
         height: 50px;
-        border-radius: 20px;
+        border-radius: 5px;
         font-size: 1.5rem;
         letter-spacing: .1rem;
         text-transform: uppercase;
@@ -47,115 +63,81 @@ html{
     }
 
 
-    .main:hover{
+    main:hover {
         color: lightblue;
-        letter-spacing: .25rem;
-        text-shadow: 0 0 3px lightblue;
-        transition-delay: 1ms;
+        letter-spacing: 0.25rem;
+        text-shadow: 0 0 8px lightblue;
     }
-
-    .main span{
+    
+    /* Click Animation */
+    .main:active {
+        transform: scale(0.95);
+    }
+    
+    /* ------------------- */
+    /* 🔥 Animated Borders */
+    /* ------------------- */
+    .main span {
         position: absolute;
         display: block;
-        background: rgb(173, 230, 194);
-        box-shadow: 0 0 30px lightblue;
+        background: cyan;
+        transition: transform 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
     }
-
-    .main span:nth-child(1){
+    
+    /* Top Border */
+    .main span:nth-child(1) {
+        top: 0;
         left: 0;
-        top: 0;
-        width: 50.5%;
-        height: 1.5px;
+        width: 100%;
+        height: 3px;
         transform: scaleX(0);
-        transition: transform .5s;
         transform-origin: left;
     }
-
-    .main:hover span:nth-child(1){
-        transform: scaleX(1);
-        transform-origin: right;
-    }
-
-    .main span:nth-child(2){
-        right: 0;
+    
+    /* Right Border */
+    .main span:nth-child(2) {
         top: 0;
-        width: 50.5%;
-        height: 1.5px;
-        transform: scaleX(0);
-        transition: transform .5s;
-        transform-origin: right;
-    }
-
-    .main:hover span:nth-child(2){
-        transform: scaleX(1);
-        transform-origin: left;
-    }
-
-    .main span:nth-child(3){
         right: 0;
-        top: 0;
-        width: 0.2%;
+        width: 3px;
         height: 100%;
         transform: scaleY(0);
-        transition: transform .5s;
-        transition-delay: .3s;
-        transform-origin: bottom;
-
-    }
-
-    .main:hover span:nth-child(3){
-        transform: scaleY(1);
         transform-origin: top;
     }
-
-    .main span:nth-child(4){
+    
+    /* Bottom Border */
+    .main span:nth-child(3) {
+        bottom: 0;
         left: 0;
+        width: 100%;
+        height: 3px;
+        transform: scaleX(0);
+        transform-origin: right;
+    }
+    
+    /* Left Border */
+    .main span:nth-child(4) {
         top: 0;
-        width: 0.2%;
+        left: 0;
+        width: 3px;
         height: 100%;
         transform: scaleY(0);
-        transition: transform .5s;
-        transition-delay: .3s;
         transform-origin: bottom;
-
     }
-
-    .main:hover span:nth-child(4){
+    
+    /* Hover Effect for Borders */
+    .main:hover span:nth-child(1),
+    .main:hover span:nth-child(3) {
+        transform: scaleX(1);
+    }
+    
+    .main:hover span:nth-child(2),
+    .main:hover span:nth-child(4) {
         transform: scaleY(1);
-        transform-origin: left;
     }
-
-    .main span:nth-child(5){
-        left: 0;
-        bottom: 0;
-        width: 50.5%;
-        height: 1.5px;
-        transform: scaleX(0);
-        transition: transform .5s;
-        transform-origin: right;
-        transition-delay: .3s;
-    }
-
-    .main:hover span:nth-child(5){
-        transform: scaleX(1);
-        transform-origin: left;
-    }
-
-    .main span:nth-child(6){
-        right: 0;
-        bottom: 0;
-        width: 50.5%;
-        height: 1.5px;
-        transform: scaleX(0);
-        transition: transform .5s;
-        transition-delay: .3s;
-        transform-origin: left;
-
-    }
-
-    .main:hover span:nth-child(6){
-        transform: scaleX(1);
-        transform-origin: right;
+    
+    /* Glow Effect on Hover */
+    .main:hover span {
+        box-shadow: 0 0 10px cyan, 0 0 20px cyan, 0 0 40px cyan;
     }
 
     th{

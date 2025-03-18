@@ -1,6 +1,6 @@
 var tickers = JSON.parse(localStorage.getItem('tickers')) || [];
 var lastPrices = {};
-var counter = 3;
+var counter = 13;
 
 function startUpdateCycle() {
     updatePrices();
@@ -9,9 +9,65 @@ function startUpdateCycle() {
         $('#counter').text(counter);
         if (counter <= 0) {
             updatePrices();
-            counter = 3;
+            counter = 13;
         }
     }, 1000);
+}
+
+
+// second-page.js
+
+$(document).ready(function() {
+    // Retrieve the stock ticker from localStorage
+    const stock = localStorage.getItem('stock');
+
+    if (stock) {
+        // Call the ticker function with the retrieved stock
+        ticker(stock);
+    }
+});
+
+// Function to display the stock information
+function ticker(ticker) {
+    $('#details').append(`
+        <div id="${ticker}" class="box">
+            <h2>${ticker}</h2><br>
+            <p id="${ticker}-price"></p><br>
+            <p id="${ticker}-pct"></p>
+        </div>
+    `);
+
+    // Optionally, clear the stored stock after use
+    localStorage.removeItem('stock');
+
+    // Call updatePrices to fetch and display the latest prices
+    updatePrice();
+}
+
+function updatePrice(ticker) {
+    $.ajax({
+        url: '/get_stock_data',
+        type: 'POST',
+        data: JSON.stringify({ 'ticker': ticker.replace(/\$/g, '').toUpperCase() }),
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        success: function (data) {
+            if (data.error) {
+                console.error(`Error fetching ${ticker}: ${data.error}`);
+                return;
+            }
+
+            var changePercent = ((data.currentPrice - data.openPrice) / data.openPrice) * 100;
+            var colorClass = changePercent <= -2 ? 'dark-red' : changePercent < 0 ? 'red' : changePercent <= 2 ? 'green' : 'dark-green';
+
+            $(`#${ticker}-price`).text(`$${data.currentPrice.toFixed(2)}`);
+            $(`#${ticker}-pct`).text(`${changePercent.toFixed(2)}%`);
+            $(`#${ticker}-price, #${ticker}-pct`).removeClass('dark-red red green dark-green').addClass(colorClass);
+        },
+        error: function (xhr, status, error) {
+            console.error(`Error fetching ${ticker}: ${xhr.responseText}`);
+        }
+    });
 }
 
 
@@ -32,7 +88,7 @@ $(document).ready(function(){
         }
         $('#new-ticker').val('');
         updatePrices();
-        window.location.href = 'middle';
+        window.location.href = '/middle';
 
     });
 
@@ -44,15 +100,24 @@ $(document).ready(function(){
     }); 
 
     $('#tickers-grid').on('click', '.detail', function(){
-        var ticker = $(this).data('ticker');
-        window.location.href = '/new/' + ticker;
+        var stock = $(this).data('ticker');
+        // Store the selected stock symbol in localStorage
+        localStorage.setItem('stock', stock);
+        // Redirect to second-page.html
+        window.location.href = '/new/'+stock;  // Redirect to the details page
     });
 
     startUpdateCycle();
 });
 
 function addTickerToGrid(ticker) {
-    $('#tickers-grid').append(`<div id="${ticker}" class="stock-box"> <h2>${ticker}</h2><br> <p id="${ticker}-price"></p> <br> <p id="${ticker}-pct"></p><br><button class="detail" data-ticker="${ticker}">detail</button> <button class="remove-btn" data-ticker="${ticker}">X</button></div>`);
+    $('#tickers-grid').append(`<div id="${ticker}" 
+        class="stock-box"> 
+        <h2>${ticker}</h2><br> 
+        <p id="${ticker}-price"></p> <br> 
+        <p id="${ticker}-pct"></p><br>
+        <button class="detail" data-ticker="${ticker}">detail</button> 
+        <button class="remove-btn" data-ticker="${ticker}">X</button></div>`);
 }
 
 function updatePrices() {

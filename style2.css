@@ -19,6 +19,7 @@ html{
         position: sticky;
         top: 0;
         padding: 18px;
+        padding-bottom: 40px;
         /*z-index: 1001;   */
     }
 
@@ -67,20 +68,84 @@ html{
     }
 
 
-    td,
-    th {
-        padding-right: 50px; /* Adjust the value as needed */
+    td{
+        width: 100vh; /* Adjust the value as needed */
+        padding-left: 30px;
+        padding-top: 20px;
 
+    }
+
+    tr {
+        width: 100vh; /* Adjust the value as needed */
+        padding-top: 20px;
+
+    
     }
 
     .main{
         text-align: justify;
-        width: 1000px;
-        padding-left: 70px;
+        width: 100vh;
+        padding-left: 60px;
+        justify-content: center;
+        align-items: center;
         height: 100%;
-        padding-top: 150px;
         letter-spacing: .1rem;
+        line-height: 1.6;
+
     }
+
+    .info-table {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: black;
+        color: white;
+        height: 100%;
+        overflow: auto;
+        letter-spacing: .1rem;
+        line-height: 1.2;
+    }
+
+    #details {
+        display: flex;
+        flex-direction: column;
+        width: 300px;
+        height: 100%;
+        color: #fffcfc;
+        background-color: transparent;
+        border-radius: 8px;
+        padding: 5px;
+        text-align: left;
+    }
+    
+    
+    .box {
+        display: flex;
+        justify-content: space-between; 
+        flex-direction: row;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 5px;
+        z-index: 10;
+    }
+    
+    .box:last-child {
+        border-bottom: none;
+    }
+    
+    .box h2 {
+        font-size: 25px;
+        color: #ffffff;
+        margin: 0;
+    }
+    
+    .box p {
+        font-size: 20px;
+        margin: 5px 0;
+    }
+
+
+
 
     #news {
         display: flex;
@@ -91,6 +156,8 @@ html{
         color: white;
         height: 780px;
         overflow: auto;
+        letter-spacing: .1rem;
+        line-height: 1.6;
     }
 
     .third{
@@ -168,43 +235,60 @@ html{
 
     .midd{
         width: 100%;
-        height: 1025px;
+        height: 100vh;
         background-color: black;
         color: white;
+        padding-top: 50px;
     }
 
-    #tickers-grid{
+    .in {
+        width: 250px;
+        padding: 10px;
+        border: 2px solid white;
+        border-radius: 5px;
+        background-color: transparent;
+        color: white;
+        font-size: 16px;
+        outline: none;
+        transition: box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out;
+    }
+    
+    /* Glowing effect on focus */
+    .in:focus {
+        border-color: cyan;
+        box-shadow: 0 0 10px cyan, 0 0 20px cyan;
+    }
+    #tickers-grid {
         display: flex;
         flex-direction: column;
         padding: 50px;
-        flex-grow: wrap;
+        flex-wrap: wrap; /* Allow content to wrap */
         align-items: center;
         justify-content: center;
+        max-height: 100vh; /* Restrict height */
+        overflow-y: auto; /* Enable vertical scrolling */
+        box-sizing: border-box; /* Prevent padding from adding to the height */
     }
-
-    #add-ticker-form{
+    
+    #add-ticker-form {
         display: flex;
-        width: 100%;
-        padding-right: 500px;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
     }
-
+    
     #new-ticker {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 350px;
         font-size: 1.3rem;
     }
+    
 
 
     .stock-box{
         display: flex;
         flex-direction: row;
-        width: 700px;
+        width: 600px;
         height: 70px;
-        border: 1px solid rgb(0, 0, 0);
-        margin: 15px;
         padding: 25px;
         color: white;
         justify-content: space-between; /* Add space between contents */
@@ -215,14 +299,59 @@ html{
         color: white; /* Set h2 color to white */
     }
 
+    .stock-box p {
+        font-size: 1.2rem; /* Set h2 color to white */
+    }
 
-    .remove-btn {
-        width: 5px;
-        height: 2px;
-        font-size: 1rem;
-        padding-right: 10px;
-        color: rgb(255, 255, 255);
-        background-color: transparent;
+
+    /* General Button Styling */
+    .btn {
+        display: inline-block;
+        padding: 12px 30px;
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: white;
+        background: linear-gradient(45deg, #00ffcc, #0066ff); /* Gradient background */
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        text-transform: uppercase;
+        transition: all 0.4s ease-in-out;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+    }
+
+    /* Hover Effect */
+    .btn:hover {
+        background: linear-gradient(45deg, #0066ff, #00ffcc);
+        box-shadow: 0 0 15px #00ffcc, 0 0 30px #00ffcc, 0 0 45px #00ffcc;
+        transform: scale(1.05);
+    }
+
+    /* Click Effect */
+    .btn:active {
+        transform: scale(0.95);
+    }
+
+    /* Adding Animated Glowing Borders */
+    .btn::before {
+        content: "";
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+        background: linear-gradient(45deg, #00ffcc, #0066ff);
+        z-index: -1;
+        filter: blur(10px);
+        opacity: 0;
+        transition: opacity 0.4s ease-in-out;
+    }
+
+    /* Activate Glow Effect on Hover */
+    .btn:hover::before {
+        opacity: 1;
     }
 
     .gray-flash{
@@ -241,15 +370,13 @@ html{
     }
 
 
-    .form{
-        padding-left: 570px;
-        padding-top: 37px;
-    }
+
 
     .in{
         width: 400px;
         height: 40px;
     }
+
     .detail{
         color: white;
         background-color: transparent;
@@ -305,7 +432,7 @@ html{
 
     #stock{
         display : flex;
-        flex-direction : row;
+        flex-direction : column;
         width: 100%;
         height: 100%;
         justify-content: center;
@@ -318,17 +445,41 @@ html{
 
     td,
     th {
-        padding-right: 20px; /* Adjust the value as needed */
+        display : flex;
+        flex-direction : column;
 
+    }
+
+    #details {
+        display: flex;
+        flex-direction: column;
+        width: 300px;
+        height: 100%;
+        color: #fffcfc;
+        padding: 5px;
+    }
+    
+    
+    .box {
+        display: flex;
+        justify-content: space-between; 
+        flex-direction: row;
+        padding: 5px;
+        padding-top: 40px;
+        z-index: 10;
+    }
+
+    .box p{
+        font-size: 1.2rem;
     }
 
     .main{
         text-align: justify;
         width: 100%;
-        padding-left: 50px;
         height: 100%;
-        padding-top: 100px;
+        padding-top: 50px;
         letter-spacing: .1rem;
+        padding: 20px;
     }
 
     #news {
@@ -340,6 +491,8 @@ html{
         color: white;
         height: 780px;
         overflow: auto;
+        padding: 20px;
+
     }
 
     .third{
@@ -383,11 +536,9 @@ html{
         display: flex;
         flex-direction: column; /* Display content in columns */
         text-align: justify;
-        padding-left: 60px;
         padding-bottom: 70px;
         max-width: 100%; /* Ensure content doesn't exceed the width of the screen */
         color: white;
-        width: 1000px;
         letter-spacing: .1rem;
     }
 
@@ -421,6 +572,8 @@ html{
         color: white;
     }
 
+
+
     #tickers-grid{
         display: flex;
         flex-direction: column;
@@ -428,7 +581,11 @@ html{
         flex-grow: wrap;
         align-items: center;
         justify-content: center;
+        max-height: 100vh; /* Restrict height */
+        overflow-y: auto; /* Enable vertical scrolling */
+        box-sizing: border-box; /* Prevent padding from adding to the height */
     }
+
 
     #add-ticker-form{
         display: flex;
@@ -488,7 +645,6 @@ html{
 
 
     .form{
-        padding-left: 570px;
         padding-top: 37px;
     }
 

@@ -11,7 +11,6 @@
 </head>
 <body>
 
-
     <section id="home">
         <div class="main" id="main-button">
             <span></span>
@@ -20,50 +19,51 @@
             <span></span>
             <span></span>
             <span></span>
+            <span></span>
+            <span></span>
+
             <form id="add-ticker-form">
                 <label for="new-ticker"></label>
                 <input type="text" id="new-ticker" placeholder="Add stock" required class="input">
             </form>
-        </div>
 
-        
         <div class="loading-screen">
-                <div class="loader">
-                    <div class="loader-1 bar"></div>
-                    <div class="loader-2 bar"></div>
-                </div>
+            <div class="loader">
+                <div class="loader-1 bar"></div>
+                <div class="loader-2 bar"></div>
+            </div>
 
-                <div class="counter">
-                    <div class="counter-1 digit">
-                        <div class="num">0</div>
-                        <div class="num num1offset1">1</div>
-                    </div>
-                    <div class="counter-2 digit">
-                        <div class="num">0</div>
-                        <div class="num1offset2">1</div>
-                        <div class="num">2</div>
-                        <div class="num">3</div>
-                        <div class="num">4</div>
-                        <div class="num">5</div>
-                        <div class="num">6</div>
-                        <div class="num">7</div>
-                        <div class="num">8</div>
-                        <div class="num">0</div>
-                        <div class="num">0</div>
-                    </div>
-                    <div class="counter-3 digit">
-                        <div class="num">0</div>
-                        <div class="num">1</div>
-                        <div class="num">2</div>
-                        <div class="num">3</div>
-                        <div class="num">4</div>
-                        <div class="num">5</div>
-                        <div class="num">6</div>
-                        <div class="num">7</div>
-                        <div class="num">8</div>
-                        <div class="num">0</div>
-                    </div>
+            <div class="counter">
+                <div class="counter-1 digit">
+                    <div class="num">0</div>
+                    <div class="num num1offset1">1</div>
                 </div>
+                <div class="counter-2 digit">
+                    <div class="num">0</div>
+                    <div class="num">1</div>
+                    <div class="num">2</div>
+                    <div class="num">3</div>
+                    <div class="num">4</div>
+                    <div class="num">5</div>
+                    <div class="num">6</div>
+                    <div class="num">7</div>
+                    <div class="num">8</div>
+                    <div class="num">9</div>
+                    <div class="num">0</div>
+                </div>
+                <div class="counter-3 digit">
+                    <div class="num">0</div>
+                    <div class="num">1</div>
+                    <div class="num">2</div>
+                    <div class="num">3</div>
+                    <div class="num">4</div>
+                    <div class="num">5</div>
+                    <div class="num">6</div>
+                    <div class="num">7</div>
+                    <div class="num">8</div>
+                    <div class="num">9</div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -85,12 +85,12 @@
 
             const finalDiv = document.createElement("div");
             finalDiv.className = "num";
-            finalDiv.textContent = "0"; // Fixed the syntax error
+            finalDiv.textContent = "0";
             counter3.appendChild(finalDiv);
 
             function animate(counter, duration, delay = 0) {
                 const numHeight = counter.querySelector(".num").clientHeight;
-                const totalDistance = (counter.querySelectorAll(".num").length - 1) * numHeight; // Fixed querySelectorAll typo
+                const totalDistance = (counter.querySelectorAll(".num").length - 1) * numHeight;
 
                 gsap.to(counter, {
                     y: -totalDistance,
@@ -108,7 +108,7 @@
         gsap.to(".digit", {
             top: "-150px",
             stagger: {
-                amount: 0.25, // Fixed the typo in 'amount'
+                amount: 0.25,
             },
             delay: 6,
             duration: 1,
@@ -124,7 +124,7 @@
         gsap.from(".loader-2", {
             width: 0,
             delay: 1.9,
-            duration: 2 ,
+            duration: 2,
             ease: "power2.inOut"
         });
 
@@ -136,14 +136,13 @@
 
         gsap.to(".loader-1", {
             rotate: 90,
-            y: -50, // Changed '=' to ':' for object property assignment
+            y: -50,
             duration: 0.5,
             delay: 6,
-
         });
 
         gsap.to(".loader-2", {
-            x: -75, // Added quotes around the percentage value
+            x: -75,
             y: 75,
             duration: 0.5,
         }, "<");
@@ -171,7 +170,8 @@
             ease: "power1.inOut",
         });
 
-        gsap.to("h1", 1.5,{
+        gsap.to("h1", {
+            duration: 1.5,
             delay: 7,
             y: -80,
             ease: "power4.inOut",
@@ -181,12 +181,5 @@
         });
     </script>
 
-<!--
-    <script>
-        document.getElementById("main-button").addEventListener("click", function() {
-            window.location.href = "second-page";
-        });
-    </script>
--->
 </body>
 </html>
