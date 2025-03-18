@@ -27,7 +27,6 @@ matplotlib.use('agg')  # Set the backend to 'agg'
 app = Flask(__name__)
 
 # Model loading
-model = load_model('stoc.h5')
 
 
 @app.route('/fetch_stock/<ticker>', methods=['GET'])
