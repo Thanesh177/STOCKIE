@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style2.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <title>Second Page</title>
+</head>
+<body>
+    <nav class="navbar">
+        <ul>
+            <li><a href="#stock">Summary</a></li>
+            <li><a href="#news">News</a></li>
+            <li><a href="#chart">Chart</a></li>
+            <li><a href="#prediction">Prediction</a></li>
+        </ul>
+    </nav>
+
+    <section id="stock">
+        <div id="details"></div>
+
+        <div class="main">
+            <table>
+
+                <tbody>
+                    <tr>
+                        <td><strong><p>SUMMARY</p><br></strong>{{ stock_data }}</td>
+                        <br>
+                        <td>
+                            <table class="info-table">
+                                <tbody>
+                                    {% for item in s %}
+                                    <tr>
+                                        <td><strong>{{ item[0] }}</strong></td>
+                                        <td>{{ item[1] }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="news">
+        <div class="main2">
+            <table>
+                <thead>
+                    <tr>
+                        <th><h1>NEWS</h1></th>
+                    </tr>
+                </thead>
+                <tbody id="news_data_body">
+                    {% if news %}
+                        {% for article in news %}
+                        <tr>
+                            <td>{{ article }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td>No news available.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="prediction">
+        <div>
+            <div class="image-container">
+                {% if plot_data %}
+                    <img src="data:image/png;base64,{{ plot_data }}" alt="Stock Prices Plot">
+                {% else %}
+                    <p style="text-align: center; font-weight: bold;">No chart available.</p>
+                {% endif %}
+            </div>   
+            <div class="third" style="color: black;">
+                {% for prediction in predictions %}
+                    <p class="pre">AI Prediction for the next Day: {{ prediction }}</p>
+                {% endfor %}
+                <p class="pree">Disclaimer: The prediction shown here might be wrong, so don't make any decisions solely based on this data.</p>
+            </div>   
+        </div>   
+    </section>     
+</body>
+</html>
