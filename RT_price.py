@@ -1,111 +1,160 @@
 from flask import Flask, render_template, jsonify, request
 from functools import lru_cache
 import pandas as pd
-import requests
-from requests.exceptions import ConnectionError
-from bs4 import BeautifulSoup
 import yfinance as yf
-from keras.initializers import glorot_uniform
 import matplotlib
+import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
 import numpy as np
-import matplotlib.pyplot as plt
-import pandas_datareader as web
 import datetime as dt
-import pickle
+import boto3, os
 from keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
+from botocore.exceptions import NoCredentialsError, ClientError
 
-from prediction import predict_prices
-from prediction import make_prediction
+# Internal modules
+from prediction import predict_prices, make_prediction
+from web_scrapping import summary, event, data as fetch_news
 
-from web_scrapping import summary, event, data
+# --- AWS S3 CONFIG ---
+MODEL_PATH = "/tmp/stoc.h5"        # EB temp directory (writable)
+S3_BUCKET = "stockie-models"       # replace with your actual bucket name
+S3_KEY = "stoc.h5"                 # file name inside the bucket
 
-matplotlib.use('agg')  # Set the backend to 'agg'
+model = None
 
+
+def load_model_from_s3():
+    """Download and cache the model from S3 once."""
+    global model
+    if model is None:
+        try:
+            s3 = boto3.client("s3")
+            if not os.path.exists(MODEL_PATH):
+                print("⏬ Downloading model from S3...")
+                s3.download_file(S3_BUCKET, S3_KEY, MODEL_PATH)
+            model = load_model(MODEL_PATH)
+            print("✅ Model loaded successfully from S3.")
+        except (NoCredentialsError, ClientError, Exception) as e:
+            print(f"❌ Error loading model from S3: {e}")
+            model = None
+    return model
+
+
+# --- Matplotlib config ---
+matplotlib.use('agg')
+
+# --- Flask setup ---
 app = Flask(__name__)
 
-# Model loading
-model = load_model('stoc.h5')
 
-
-@app.route('/fetch_stock/<ticker>', methods=['GET'])
-def fetch_stock(ticker):
-    try:
-        data = fetch_stock_data(ticker)
-        if data.empty:
-            return jsonify({"error": "No data available for the given ticker."}), 404
-        return jsonify({"message": "Stock data fetched successfully.", "data": data.to_dict()})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/check_status/<task_id>', methods=['GET'])
-def check_status(task_id):
-    return jsonify({"error": "Task monitoring functionality not implemented."})
+# --- ROUTES ---
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
+
 @app.route('/middle')
 def middle():
     return render_template('mid.html')
 
-@app.route('/new/<ticker>')
-def second_page(ticker):
+
+@app.route('/fetch_stock/<ticker>', methods=['GET'])
+def fetch_stock(ticker):
+    """Fetch historical stock data."""
     try:
-        actual_prices, predicted_prices = make_prediction(ticker)
-        predict_price = predict_prices(ticker)
-
-        stock_data = summary(ticker)
-        event_data = event(ticker)
-        news_data = data(ticker)
-
-        plt.figure(figsize=(10, 6))
-        plt.plot(actual_prices, color='black', label='Actual Prices')
-        plt.plot(predict_price, color='green', label='Predicted Prices')
-        plt.legend()
-        plt.title(f'Price Prediction for {ticker}')
-        plt.xlabel('Time')
-        plt.ylabel('Price')
-        plt.grid(True)
-
-        buffer = BytesIO()
-        plt.savefig(buffer, format='png')
-        buffer.seek(0)
-        plt.close()
-
-        plot_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
-
-        return render_template('new.html', 
-            stock_data=stock_data, 
-            news=news_data, 
-            s=event_data, 
-            predictions=predicted_prices, 
-            plot_data=plot_data)
+        df = fetch_stock_data(ticker)
+        if df is None or df.empty:
+            return jsonify({"error": "No data returned for the given ticker."}), 404
+        return jsonify({
+            "message": "Stock data fetched successfully.",
+            "data": df.to_dict(orient="records")
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/get_stock_data', methods=['POST'])
 def get_stock_data():
+    """Return last open/close price."""
     try:
         ticker = request.get_json()['ticker']
         data = yf.Ticker(ticker).history(period='1Y')
         if data.empty:
-            return jsonify({"error": "No data available for the given ticker."}), 404
+            return jsonify({"error": "No data available."}), 404
         return jsonify({
-            'currentPrice': data.iloc[-1].Close,
-            'openPrice': data.iloc[-1].Open
+            'currentPrice': float(data.iloc[-1].Close),
+            'openPrice': float(data.iloc[-1].Open)
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+@app.route('/predict/<ticker>')
+def predict(ticker):
+    """Generate and visualize predictions for a ticker."""
+    model = load_model_from_s3()
+    if model is None:
+        return jsonify({"error": "Model not available"}), 500
+
+    actual_prices, predicted_prices = make_prediction(ticker)
+    if actual_prices is None or predicted_prices is None:
+        return jsonify({"error": "Prediction failed"}), 500
+
+    # Plot results
+    plt.figure(figsize=(10, 6))
+    plt.plot(range(len(actual_prices)), actual_prices, color='black', label='Actual')
+    plt.plot(range(len(actual_prices), len(actual_prices) + len(predicted_prices)),
+             predicted_prices, color='green', label='Predicted')
+    plt.axvline(x=len(actual_prices) - 1, color='red', linestyle='--', label='Prediction Start')
+    plt.title(f'Price Prediction for {ticker}')
+    plt.xlabel('Days')
+    plt.ylabel('Price')
+    plt.legend()
+    plt.grid(True)
+
+    # Encode plot as base64
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    plt.close()
+    plot_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+    stock_data = summary(ticker)
+    event_data = event(ticker)
+    news_data = fetch_news(ticker)
+
+    return render_template(
+        'new.html',
+        stock_data=stock_data,
+        news=news_data,
+        next_day_prediction=predicted_prices[0],
+        s=event_data,
+        predictions=predicted_prices.tolist(),
+        plot_data=plot_data
+    )
+
+
+@app.route('/health')
+def health():
+    """Elastic Beanstalk health-check endpoint."""
+    return jsonify({"status": "running"}), 200
+
+
+# --- Cached stock data helper ---
 @lru_cache(maxsize=100)
 def fetch_stock_data(ticker):
     start = dt.datetime(2012, 1, 1)
     end = dt.datetime.now()
-    return yf.download(tickers=[ticker], start=start, end=end)
+    try:
+        return yf.download(tickers=[ticker], start=start, end=end, threads=False)
+    except Exception as e:
+        print(f"Error fetching stock data: {e}")
+        return None
 
-if __name__ == '__main__':
-    app.run(debug=True)
+
+# --- Start app (for local testing only) ---
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)

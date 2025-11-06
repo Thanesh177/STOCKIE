@@ -2,80 +2,72 @@ import datetime as dt
 import pandas as pd
 import numpy as np
 import yfinance as yf
-import time
-from keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
+from keras.models import load_model
+import boto3, os
+from botocore.exceptions import NoCredentialsError, ClientError
 
-# Load the pre-trained model
-try:
-    model = load_model('stoc.h5')
-    print("Model loaded successfully.")
-except Exception as e:
-    print(f"Error loading model: {e}")
-    model = None
+# --- AWS S3 CONFIG ---
+S3_BUCKET = "stockie-models"
+S3_KEY = "stoc.h5"
+MODEL_PATH = "/tmp/stoc.h5"
+model = None
 
-def fetch_stock_data(ticker, start_date="2012-01-01", max_retries=3):
-    """Fetch historical stock data with retries."""
-    for attempt in range(max_retries):
-        try:
-            data = yf.download(tickers=ticker, start=start_date, end=dt.datetime.now())
 
-            if data.empty:
-                print(f"Warning: No data found for {ticker}. Attempt {attempt+1}/{max_retries}")
-                time.sleep(2)  # Wait before retrying
-                continue
-
-            return data  # Successfully fetched data
-
-        except Exception as e:
-            print(f"Error fetching data for {ticker}: {e}. Attempt {attempt+1}/{max_retries}")
-            time.sleep(2)  # Wait before retrying
-
-    return None  # Return None after all retries fail
-
-def prepare_model_inputs(data, prediction_days=30):
-    """Prepare scaled model inputs for the LSTM model."""
-    scaler = MinMaxScaler(feature_range=(0, 1))
-
-    if len(data) < prediction_days:
-        print(f"Error: Not enough data to make predictions. Required: {prediction_days}, Available: {len(data)}")
-        return None, None
-
-    scaled_data = scaler.fit_transform(data['Close'].values.reshape(-1, 1))
-
-    model_inputs = scaled_data[-prediction_days:]
-    model_inputs = model_inputs.reshape(1, prediction_days, 1)  # Reshape for LSTM model
-
-    return model_inputs, scaler
-
-def make_prediction(ticker, prediction_days=30):
-    data = fetch_stock_data(ticker)
-    if data is None or data.empty:
-        print(f"No data available for {ticker}.")
-        return None, None
-
-    model_inputs, scaler = prepare_model_inputs(data, prediction_days)
-    if model_inputs is None:
-        return None, None
-
-    prediction = model.predict(model_inputs)
-    predicted_price = scaler.inverse_transform(prediction)
-
-    if predicted_price is None or len(predicted_price) == 0:
-        print("Prediction failed.")
-        return None, None
-
-    return data['Close'].values, predicted_price
-
-def predict_prices(company, prediction_days=30):
-    """Generate multiple-day predictions using an LSTM model."""
+def load_model_from_s3():
+    """Download and cache model from S3."""
+    global model
     if model is None:
-        print("Error: Model not loaded.")
+        try:
+            s3 = boto3.client("s3")
+            if not os.path.exists(MODEL_PATH):
+                print("⏬ Downloading model from S3...")
+                s3.download_file(S3_BUCKET, S3_KEY, MODEL_PATH)
+            model = load_model(MODEL_PATH)
+            print("✅ Model loaded successfully from S3.")
+        except (NoCredentialsError, ClientError) as e:
+            print(f"❌ S3 error: {e}")
+            model = None
+    return model
+
+
+def fetch_stock_data(ticker, start_date="2012-01-01"):
+    """Fetch stock data or fallback to cached CSV."""
+    try:
+        data = yf.download(tickers=[ticker], start=start_date, end=dt.datetime.now())
+        if not data.empty:
+            data.to_csv(f"{ticker}_data.csv")
+            return data
+    except Exception as e:
+        print(f"⚠️ Error fetching data: {e}")
+    try:
+        return pd.read_csv(f"{ticker}_data.csv", index_col=0, parse_dates=True)
+    except FileNotFoundError:
+        print("❌ No cached data found.")
         return None
 
-    data = fetch_stock_data(company)
+
+def prepare_model_inputs(data, prediction_days=30):
+    """Scale the data and create input sequences for LSTM."""
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    if len(data) < prediction_days:
+        print(f"⚠️ Not enough data ({len(data)} rows). Need {prediction_days}.")
+        return None, None
+    scaled_data = scaler.fit_transform(data['Close'].values.reshape(-1, 1))
+    model_inputs = scaled_data[-prediction_days:].reshape(1, prediction_days, 1)
+    return model_inputs, scaler
+
+
+def predict_prices(ticker, prediction_days=30):
+    """Predict next prices iteratively."""
+    model = load_model_from_s3()
+    if model is None:
+        print("❌ Model not loaded.")
+        return None
+
+    data = fetch_stock_data(ticker)
     if data is None or data.empty:
-        print(f"Error: No data available for {company}.")
+        print("❌ No stock data.")
         return None
 
     model_inputs, scaler = prepare_model_inputs(data, prediction_days)
@@ -83,18 +75,22 @@ def predict_prices(company, prediction_days=30):
         return None
 
     predictions = []
-    for day in range(prediction_days):
-        try:
-            prediction = model.predict(model_inputs)
-            predicted_price = scaler.inverse_transform(prediction)[0, 0]
-            predictions.append(predicted_price)
+    for _ in range(prediction_days):
+        prediction = model.predict(model_inputs)
+        predicted_price = scaler.inverse_transform(prediction)[0, 0]
+        predictions.append(predicted_price)
+        model_inputs[0, :-1, 0] = model_inputs[0, 1:, 0]
+        model_inputs[0, -1, 0] = scaler.transform(np.array([[predicted_price]]))[0, 0]
 
-            # Correctly shift model inputs for next prediction
-            model_inputs[0, :-1, 0] = model_inputs[0, 1:, 0]  # Shift left
-            model_inputs[0, -1, 0] = scaler.transform([[predicted_price]])[0, 0]  # Insert new prediction
+    return np.array(predictions)
 
-        except Exception as e:
-            print(f"Error in day {day + 1} prediction: {e}")
-            break
 
-    return np.array(predictions) if predictions else None
+def make_prediction(ticker, prediction_days=30):
+    """Return recent actual prices and predicted prices."""
+    data = fetch_stock_data(ticker)
+    if data is None or data.empty:
+        return None, None
+
+    actual = data['Close'].values[-prediction_days:]
+    predicted = predict_prices(ticker, prediction_days)
+    return actual, predicted

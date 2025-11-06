@@ -4,62 +4,63 @@ import requests
 from requests.exceptions import ConnectionError
 from bs4 import BeautifulSoup
 import yfinance as yf
-from keras.initializers import glorot_uniform
 import matplotlib
 from prediction import predict_prices
 from prediction import make_prediction
 
 matplotlib.use('agg')  # Set the backend to 'agg'
 
-from io import BytesIO
-import base64
-
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas_datareader as web
 import datetime as dt
-import pickle
 from keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 
-# Helper function to extract specific sections of web content
+
+# Helper to extract all <p> tags from a section with a specific class
 def web_div(web_content, class_path):
-    web_div = web_content.find_all('section', {'class': class_path})
+    web_divs = web_content.find_all('section', {'class': class_path})
     try:
-        p = web_div[0].find_all('p')
-        texts = [ps.get_text() for ps in p]
+        p_tags = web_divs[0].find_all('p')
+        texts = [p.get_text(strip=True) for p in p_tags]
     except IndexError:
         texts = []
     return texts
-"""
-# Fetch summary of a stock from Yahoo Finance
-def summary(stock_code):
-    url = f'https://ca.finance.yahoo.com/quote/{stock_code}/'
-    web_content = fetch_page(url)
-    if not web_content:
-        return None
-
-    texts = web_div(web_content, 'card yf-1d08kze')
-    return texts[0] if texts else "No summary available"
-    """
 
 def summary(stock_code):
-    url = f'https://ca.finance.yahoo.com/quote/{stock_code}/'  
+    url = f'https://finance.yahoo.com/quote/{stock_code}'
     headers = {
-    'User-agent': 'Mozilla/5.0',
+        'User-Agent': 'Mozilla/5.0'
     }
-    try:
-        r = requests.get(url, headers=headers)
-        web_content = BeautifulSoup(r.text, 'html.parser')
-        texts = web_div(web_content, 'card yf-1d08kze')
-        if texts != []:
-            summ = texts[0]
-        else:
-            summ = []
-    except ConnectionError:
-        summ = None
 
-    return summ
+    try:
+        response = requests.get(url, headers=headers)
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        overview = {}
+
+        description_block = soup.find('div', class_='description yf-1ja4ll8')
+        if description_block:
+            desc = description_block.find('p')
+            overview["Description"] = desc.text.strip() if desc else "N/A"
+
+            link_tag = description_block.find('a', href=True)
+            overview["Website"] = link_tag['href'].strip() if link_tag else "N/A"
+
+        info_sections = soup.find_all('div', class_='infoSection yf-1ja4ll8')
+        for section in info_sections:
+            label = section.find('h3')
+            value = section.find('p')
+            if label and value:
+                overview[label.get_text(strip=True)] = value.get_text(strip=True)
+
+        return overview if overview else {"error": "No overview data found."}
+
+    except Exception as e:
+        return {"error": str(e)}
+
+# Store results here
 
 # Helper function to extract data from specific divs
 def web(web_content, class_path):
@@ -71,54 +72,63 @@ def web(web_content, class_path):
         texts = []
     return texts
 
-# Fetch event-related data for a stock
+
 def event(stock_code):
-    url = f'https://ca.finance.yahoo.com/quote/{stock_code}'
+    url = f"https://finance.yahoo.com/quote/{stock_code}"
     headers = {
-        'User-agent': 'Mozilla/5.0',
+        'User-Agent': 'Mozilla/5.0'
     }
+
     try:
         r = requests.get(url, headers=headers)
-        web_content = BeautifulSoup(r.text, 'html.parser')
-        texts = web(web_content, 'container yf-1jj98ts')
-        if texts:
-            summ = texts
-        else:
-            summ = ["nill"]
-    except ConnectionError:
-        summ = ["nill"]
+        soup = BeautifulSoup(r.text, 'html.parser')
 
-    chunked_summ = [summ[i:i + 2] for i in range(0, len(summ), 2)]
-    return chunked_summ
+        # Find all statistic blocks (each is a <li>)
+        stat_items = soup.find_all('li')
+
+        summary_data = {}
+        for item in stat_items:
+            label = item.find('span', class_='label')
+            value = item.find('span', class_='value')
+
+            if label and value:
+                summary_data[label.text.strip()] = value.text.strip()
+
+        return summary_data if summary_data else {"error": "No data found"}
+
+    except requests.exceptions.ConnectionError:
+        return {"error": "Connection error"}
 
 # Extract news articles, filtering out unwanted content
-def ne(web_content, custom_stop_words=None):
+def ne(web_content):
     articles = web_content.find_all('article')
-    texts = []
-    if custom_stop_words is None:
-        custom_stop_words = set()
-    if articles:
-        for article in articles:
-            spans_in_article = article.find_all('span')
-            texts.extend([span.get_text() for span in spans_in_article if span.get_text() not in custom_stop_words])
-            paragraphs_in_article = article.find_all('p')
-            texts.extend([p.get_text() for p in paragraphs_in_article if p.get_text() not in custom_stop_words])
-    return texts
+    headlines = []
+
+    for article in articles:
+        h3 = article.find('h3')
+        a = article.find('a', href=True)
+
+        if h3 and a:
+            headlines.append({
+                "title": h3.get_text(strip=True),
+                "url": a['href']
+            })
+
+    return headlines
 
 # Fetch market-related news
-def data(stock_code=None):
-    url = 'https://www.barrons.com/topics/markets?mod=BOL_TOPNAV'
-    headers = {
-        'User-agent': 'Mozilla/5.0',
-    }
-    r = requests.get(url, headers=headers)
-    web_content = BeautifulSoup(r.text, 'html.parser')
+def data(ticker):
+    url = f'https://query1.finance.yahoo.com/v1/finance/search?q={ticker}'
+    headers = {'User-Agent': 'Mozilla/5.0'}
 
-    custom_stop_words = {'Long read', '3 min read', '2 min read', '4 min read', '1 min read'}
-    texts = ne(web_content, custom_stop_words)
-    if texts:
-        summ = texts
-    else:
-        summ = None
-    return summ
+    response = requests.get(url, headers=headers)
+    data = response.json()
 
+    news = []
+    if 'news' in data:
+        for item in data['news']:
+            news.append({
+                'title': item.get('title', 'No Title'),
+                'url': item.get('link', '#')
+            })
+    return news
