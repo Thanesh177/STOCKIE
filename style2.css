@@ -70,14 +70,13 @@ html{
 
     td{
         width: 100vh; /* Adjust the value as needed */
-        padding-left: 30px;
-        padding-top: 20px;
+        padding: 10px 30px;
+        text-align: justify;
 
     }
 
     tr {
         width: 100vh; /* Adjust the value as needed */
-        padding-top: 20px;
 
     
     }
@@ -85,7 +84,6 @@ html{
     .main{
         text-align: justify;
         width: 100vh;
-        padding-left: 60px;
         justify-content: center;
         align-items: center;
         height: 100%;
@@ -147,18 +145,52 @@ html{
 
 
 
-    #news {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        background-color: rgb(0, 0, 0);
-        color: white;
-        height: 780px;
-        overflow: auto;
-        letter-spacing: .1rem;
-        line-height: 1.6;
-    }
+/* News Section Styling */
+#news {
+    padding: 40px 20px;
+    background-color: #000000;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#news .main2 {
+    max-width: 800px;
+    margin: auto;
+    background: #000000;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+#news table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#news th h1 {
+    font-size: 28px;
+    color: #ffffff;
+    text-align: left;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+}
+
+#news td {
+    padding: 22px 8px;
+    border-bottom: 1px solid #eaeaea;
+}
+
+#news a {
+    color: #0077cc;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+#news a:hover {
+    color: #005fa3;
+    text-decoration: underline;
+}
+
 
     .third{
         background-color: rgb(0, 0, 0);
@@ -482,17 +514,17 @@ html{
         padding: 20px;
     }
 
-    #news {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        background-color: rgb(0, 0, 0);
-        color: white;
-        height: 780px;
-        overflow: auto;
+    #news .main2 {
         padding: 20px;
+        background-color: #000000;
+    }
 
+    #news th h1 {
+        font-size: 22px;
+    }
+
+    #news td {
+        font-size: 15px;
     }
 
     .third{

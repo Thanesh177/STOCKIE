@@ -5,16 +5,13 @@ from requests.exceptions import ConnectionError
 from bs4 import BeautifulSoup
 import yfinance as yf
 import matplotlib
-from prediction import predict_prices
-from prediction import make_prediction
+
 
 matplotlib.use('agg')  # Set the backend to 'agg'
 
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas_datareader as web
 import datetime as dt
-from keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 
 

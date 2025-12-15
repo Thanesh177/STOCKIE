@@ -1,0 +1,6 @@
+yfinance==0.2.66
+multitasking==0.0.11
+curl_cffi
+pandas
+numpy
+scikit-learn

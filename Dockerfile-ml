@@ -1,0 +1,15 @@
+FROM tensorflow/tensorflow:2.17.0
+
+WORKDIR /app
+
+RUN python -m pip install --upgrade pip \
+  && pip install --no-cache-dir awslambdaric
+
+COPY requirements-ml.txt ./
+RUN pip install --no-cache-dir -r requirements-ml.txt
+
+COPY lambda_predict.py prediction.py stoc.h5 ./
+
+EXPOSE 8080
+ENTRYPOINT ["python", "-m", "awslambdaric"]
+CMD ["lambda_predict.handler"]

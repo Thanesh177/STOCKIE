@@ -1,96 +1,121 @@
-import datetime as dt
-import pandas as pd
+import os
 import numpy as np
-import yfinance as yf
+import pandas as pd
+from tensorflow.keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
-from keras.models import load_model
-import boto3, os
-from botocore.exceptions import NoCredentialsError, ClientError
+import yfinance as yf
 
-# --- AWS S3 CONFIG ---
-S3_BUCKET = "stockie-models"
-S3_KEY = "stoc.h5"
-MODEL_PATH = "/tmp/stoc.h5"
-model = None
+# Global model cache and scaler
+MODEL = None
+SCALER = MinMaxScaler(feature_range=(0, 1))
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "stoc.h5")  # model file baked into the image
 
+def load_model_local():
+    """Load Keras model from local file inside the container."""
+    global MODEL
+    if MODEL is not None:
+        return MODEL
 
-def load_model_from_s3():
-    """Download and cache model from S3."""
-    global model
-    if model is None:
-        try:
-            s3 = boto3.client("s3")
-            if not os.path.exists(MODEL_PATH):
-                print("⏬ Downloading model from S3...")
-                s3.download_file(S3_BUCKET, S3_KEY, MODEL_PATH)
-            model = load_model(MODEL_PATH)
-            print("✅ Model loaded successfully from S3.")
-        except (NoCredentialsError, ClientError) as e:
-            print(f"❌ S3 error: {e}")
-            model = None
-    return model
+    if not os.path.exists(MODEL_PATH):
+        raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
 
+    MODEL = load_model(MODEL_PATH)
+    return MODEL
 
-def fetch_stock_data(ticker, start_date="2012-01-01"):
-    """Fetch stock data or fallback to cached CSV."""
-    try:
-        data = yf.download(tickers=[ticker], start=start_date, end=dt.datetime.now())
-        if not data.empty:
-            data.to_csv(f"{ticker}_data.csv")
-            return data
-    except Exception as e:
-        print(f"⚠️ Error fetching data: {e}")
-    try:
-        return pd.read_csv(f"{ticker}_data.csv", index_col=0, parse_dates=True)
-    except FileNotFoundError:
-        print("❌ No cached data found.")
-        return None
+def _load_price_series_from_yfinance(ticker: str, period: str = "5y"):
+    """
+    Load historical closing prices for the given ticker using yfinance.
+    """
+    t = ticker.upper().strip()
+    if not t:
+        raise ValueError("Ticker symbol is required")
 
+    # Fetch historical data (yf.download is usually faster/cleaner in Lambda)
+    df = yf.download(t, period=period, interval="1d", progress=False, threads=False)
 
-def prepare_model_inputs(data, prediction_days=30):
-    """Scale the data and create input sequences for LSTM."""
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    if len(data) < prediction_days:
-        print(f"⚠️ Not enough data ({len(data)} rows). Need {prediction_days}.")
-        return None, None
-    scaled_data = scaler.fit_transform(data['Close'].values.reshape(-1, 1))
-    model_inputs = scaled_data[-prediction_days:].reshape(1, prediction_days, 1)
-    return model_inputs, scaler
+    if df is None or df.empty:
+        raise ValueError(f"No price data returned from yfinance for ticker {t}")
 
+    # yfinance can sometimes return MultiIndex columns like ('Close', 'AAPL')
+    # or return df['Close'] as a DataFrame. Normalize this into a 1-D Series.
+    close_obj = None
 
-def predict_prices(ticker, prediction_days=30):
-    """Predict next prices iteratively."""
-    model = load_model_from_s3()
-    if model is None:
-        print("❌ Model not loaded.")
-        return None
+    if isinstance(df.columns, pd.MultiIndex):
+        # Try the most common layouts
+        for key in [("Close", t), ("Adj Close", t), ("Close",), ("Adj Close",)]:
+            try:
+                close_obj = df[key]
+                if close_obj is not None:
+                    break
+            except Exception:
+                pass
+        if close_obj is None:
+            # Fallback: find any column whose first level is Close
+            try:
+                close_cols = [c for c in df.columns if str(c[0]).lower() == "close"]
+                if close_cols:
+                    close_obj = df[close_cols[0]]
+            except Exception:
+                close_obj = None
+    else:
+        # Standard single-index columns
+        if "Close" in df.columns:
+            close_obj = df["Close"]
+        elif "Adj Close" in df.columns:
+            close_obj = df["Adj Close"]
 
-    data = fetch_stock_data(ticker)
-    if data is None or data.empty:
-        print("❌ No stock data.")
-        return None
+    if close_obj is None:
+        raise ValueError(f"yfinance data for {t} does not contain a Close-like column")
 
-    model_inputs, scaler = prepare_model_inputs(data, prediction_days)
-    if model_inputs is None:
-        return None
+    # If Close came back as a DataFrame (e.g., multiple tickers), pick the ticker column if present
+    if isinstance(close_obj, pd.DataFrame):
+        if t in close_obj.columns:
+            close_series = close_obj[t]
+        else:
+            close_series = close_obj.iloc[:, 0]
+    else:
+        close_series = close_obj
 
-    predictions = []
-    for _ in range(prediction_days):
-        prediction = model.predict(model_inputs)
-        predicted_price = scaler.inverse_transform(prediction)[0, 0]
-        predictions.append(predicted_price)
-        model_inputs[0, :-1, 0] = model_inputs[0, 1:, 0]
-        model_inputs[0, -1, 0] = scaler.transform(np.array([[predicted_price]]))[0, 0]
+    # Ensure numeric close prices and drop non-numeric rows
+    close_series = pd.to_numeric(close_series, errors="coerce").dropna()
 
-    return np.array(predictions)
+    if close_series.empty:
+        raise ValueError(f"No numeric closing price data for ticker {t}")
 
+    close_prices = close_series.to_numpy(dtype=np.float32).reshape(-1, 1)
+    if close_prices.size == 0:
+        raise ValueError(f"No price data available for ticker {t}")
 
-def make_prediction(ticker, prediction_days=30):
-    """Return recent actual prices and predicted prices."""
-    data = fetch_stock_data(ticker)
-    if data is None or data.empty:
-        return None, None
+    return close_prices
 
-    actual = data['Close'].values[-prediction_days:]
-    predicted = predict_prices(ticker, prediction_days)
+def make_prediction(ticker: str):
+    """
+    Make a prediction for the given ticker using the Keras model and
+    historical prices fetched from yfinance.
+    """
+    # 1. Load prices from yfinance
+    close_prices = _load_price_series_from_yfinance(ticker)
+
+    # Fit scaler on this ticker's history (per-request). This matches your current local behavior.
+    scaled = SCALER.fit_transform(close_prices.astype(np.float32))
+
+    # Make sure this matches your training window size
+    lookback = 60
+    if len(scaled) < lookback:
+        raise ValueError("Not enough data to predict")
+
+    x_input = scaled[-lookback:].reshape(1, lookback, 1).astype(np.float32)
+
+    # 3. Model & predict
+    model = load_model_local()
+    pred_scaled = model.predict(x_input, verbose=0)
+
+    # 4. Inverse transform predictions
+    predicted = SCALER.inverse_transform(pred_scaled).flatten()
+    actual = close_prices[-lookback:].flatten()
+
+    # Convert to plain Python floats for JSON-serializable output
+    actual = [float(x) for x in actual]
+    predicted = [float(x) for x in predicted]
+
     return actual, predicted
