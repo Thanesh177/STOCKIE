@@ -1,0 +1,18 @@
+<section id="prediction">
+    <div class="third" style="color: black;">
+        <p class="pre">
+            <strong>AI Prediction for the Next Day:</strong>
+            <span id="nextDayPrediction">—</span>
+        </p>
+
+        {% if predictions %}
+            {% for prediction in predictions %}
+                <p>Prediction: {{ prediction }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <p class="pree">
+            Disclaimer: The prediction shown here might be wrong, so don't make any decisions solely based on this data.
+        </p>
+    </div>
+</section>

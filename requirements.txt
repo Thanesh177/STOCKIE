@@ -1,0 +1,9 @@
+Flask
+pandas
+yfinance
+matplotlib
+numpy
+boto3
+requests
+scikit-learn
+gunicorn

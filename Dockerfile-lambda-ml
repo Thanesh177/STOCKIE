@@ -1,0 +1,17 @@
+FROM public.ecr.aws/lambda/python:3.10
+
+# Install system libs needed by TF + h5py (prebuilt wheels still need runtime libs)
+RUN yum install -y \
+    gcc gcc-c++ make \
+    && yum clean all
+
+# Install TensorFlow (this may still be heavy—works only if wheels exist for this base)
+# If this fails, we switch back to tensorflow/tensorflow base OR use a smaller inference runtime.
+COPY requirements-ml.txt .
+RUN python -m pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements-ml.txt && \
+    pip install --no-cache-dir tensorflow==2.17.0
+
+COPY lambda_predict.py prediction.py stoc.h5 ${LAMBDA_TASK_ROOT}/
+
+CMD ["lambda_predict.handler"]
