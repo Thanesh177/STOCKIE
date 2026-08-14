@@ -1,1 +1,1 @@
-web: gunicorn RT_price:app
+web: gunicorn --config gunicorn.conf.py RT_price:app

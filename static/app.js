@@ -3,6 +3,12 @@ var tickers = JSON.parse(localStorage.getItem("tickers")) || [];
 var lastPrices = {};
 var counter = 13;
 var priceChart = null;
+const TICKER_PATTERN = /^[A-Z0-9][A-Z0-9.\-^=]{0,14}$/;
+
+function normalizeTicker(value) {
+    const ticker = String(value || "").trim().toUpperCase();
+    return TICKER_PATTERN.test(ticker) ? ticker : null;
+}
 
 function getTickerFromUrl() {
     try {
@@ -28,15 +34,16 @@ function startUpdateCycle() {
 }
 
 function addTickerToGrid(ticker) {
-    $("#tickers-grid").append(`
-        <div id="${ticker}" class="stock-box">
-            <h2>${ticker}</h2><br>
-            <p id="${ticker}-price"></p><br>
-            <p id="${ticker}-pct"></p><br>
-            <button class="detail" data-ticker="${ticker}">detail</button>
-            <button class="remove-btn" data-ticker="${ticker}">X</button>
-        </div>
-    `);
+    const safeTicker = normalizeTicker(ticker);
+    if (!safeTicker) return;
+    $("#tickers-grid .empty-state").remove();
+    const box = $("<div>", { id: safeTicker, class: "stock-box" });
+    box.append($("<h2>").text(safeTicker));
+    box.append($("<p>", { id: `${safeTicker}-price`, text: "Loading…" }));
+    box.append($("<p>", { id: `${safeTicker}-pct` }));
+    box.append($("<button>", { class: "detail", "data-ticker": safeTicker, text: "View details →" }));
+    box.append($("<button>", { class: "remove-btn", "data-ticker": safeTicker, text: "X" }));
+    $("#tickers-grid").append(box);
 }
 
 function updatePrice(ticker) {
@@ -113,10 +120,10 @@ function updatePrices() {
                 lastPrices[ticker] = data.currentPrice;
 
                 if (flashClass) {
-                    $("#" + ticker).addClass(flashClass);
+                    $(`#${ticker}-price, #${ticker}-pct`).addClass(flashClass);
                     setTimeout(function () {
-                        $("#" + ticker).removeClass(flashClass);
-                    }, 1000);
+                        $(`#${ticker}-price, #${ticker}-pct`).removeClass(flashClass);
+                    }, 650);
                 }
             },
             error: function (xhr) {
@@ -130,13 +137,14 @@ function renderDetailsBox(ticker) {
     if (!document.getElementById("details")) return;
     if (document.getElementById(`${ticker}-price`)) return;
 
-    $("#details").append(`
-        <div id="${ticker}" class="box">
-            <h2>${ticker}</h2><br>
-            <p id="${ticker}-price"></p><br>
-            <p id="${ticker}-pct"></p>
-        </div>
-    `);
+    const safeTicker = normalizeTicker(ticker);
+    if (!safeTicker) return;
+    $("#details").append(
+        $("<div>", { id: safeTicker, class: "box" })
+            .append($("<strong>").text(safeTicker))
+            .append($("<strong>", { id: `${safeTicker}-price`, text: "—" }))
+            .append($("<p>", { id: `${safeTicker}-pct` }))
+    );
 
     updatePrice(ticker);
 }
@@ -151,7 +159,13 @@ function safeNums(arr) {
 function setNextDayPrediction(val) {
     if (!Number.isFinite(val)) return;
     const el = document.getElementById("nextDayPrediction");
-    if (el) el.textContent = val.toFixed(2);
+    if (el) el.textContent = formatCurrency(val);
+}
+
+function formatCurrency(value) {
+    return new Intl.NumberFormat("en-US", {
+        style: "currency", currency: "USD", maximumFractionDigits: 2
+    }).format(value);
 }
 
 function renderPriceChart(ticker, actual, predicted) {
@@ -169,11 +183,13 @@ function renderPriceChart(ticker, actual, predicted) {
     const n = actual.length;
     const m = Math.max(predicted.length, 1);
 
-    const labels = Array.from({ length: n + m }, (_, i) => i + 1);
-    const actualSeries = actual.concat(Array.from({ length: m }, () => null));
-    const predSeries = Array.from({ length: n }, () => null).concat(
-        predicted.length ? predicted : [null]
+    const labels = Array.from({ length: n + m }, (_, i) =>
+        i < n ? `T${i - n + 1}` : `Forecast ${i - n + 1}`
     );
+    const actualSeries = actual.concat(Array.from({ length: m }, () => null));
+    const predSeries = Array.from({ length: Math.max(n - 1, 0) }, () => null)
+        .concat(n ? [actual[n - 1]] : [])
+        .concat(predicted.length ? predicted : [null]);
 
     if (priceChart) priceChart.destroy();
 
@@ -187,26 +203,54 @@ function renderPriceChart(ticker, actual, predicted) {
                     data: actualSeries,
                     tension: 0.25,
                     pointRadius: 0,
-                    borderWidth: 2
+                    borderWidth: 2.2,
+                    borderColor: "#72d8ff",
+                    backgroundColor: "rgba(114,216,255,.08)",
+                    fill: true
                 },
                 {
                     label: `${ticker} (Predicted)`,
                     data: predSeries,
                     tension: 0.25,
-                    pointRadius: 2,
-                    borderWidth: 2
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    borderWidth: 2.2,
+                    borderDash: [7, 5],
+                    borderColor: "#5ee4c0",
+                    backgroundColor: "#5ee4c0"
                 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: { intersect: false, mode: "index" },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: "#0b141a", borderColor: "#385260", borderWidth: 1,
+                    titleColor: "#b8c7cd", bodyColor: "#e6f5f8", padding: 11,
+                    callbacks: { label: (context) => `${context.dataset.label}: ${formatCurrency(context.parsed.y)}` }
+                }
+            },
             scales: {
-                x: { display: true },
-                y: { display: true }
+                x: { grid: { display: false }, ticks: { color: "#70828c", maxTicksLimit: 7, font: { size: 10 } } },
+                y: { grid: { color: "rgba(145,177,191,.12)" }, ticks: { color: "#70828c", callback: (value) => `$${Number(value).toFixed(0)}`, font: { size: 10 } } }
             }
         }
     });
+
+    const last = actual[n - 1];
+    const next = predicted[0];
+    const change = Number.isFinite(last) && Number.isFinite(next) ? ((next - last) / last) * 100 : null;
+    const meta = document.getElementById("chartMeta");
+    const predictionMeta = document.getElementById("predictionMeta");
+    if (meta && Number.isFinite(last)) {
+        meta.innerHTML = `<span>LAST CLOSE <b>${formatCurrency(last)}</b></span>${change !== null ? `<span>MODEL DELTA <b class="${change >= 0 ? "green" : "red"}">${change >= 0 ? "+" : ""}${change.toFixed(2)}%</b></span>` : ""}<span>HORIZON <b>${predicted.length} SESSION${predicted.length === 1 ? "" : "S"}</b></span>`;
+    }
+    if (predictionMeta && change !== null) {
+        predictionMeta.textContent = `Model projection: ${change >= 0 ? "up" : "down"} ${Math.abs(change).toFixed(2)}% from the latest observed close. Informational only—not investment advice.`;
+    }
 }
 
 async function fetchAndRenderPrediction() {
@@ -281,7 +325,7 @@ function initHome() {
     $(form).on("submit", function (e) {
         e.preventDefault();
 
-        const newTicker = input.value.trim().toUpperCase();
+        const newTicker = normalizeTicker(input.value);
         if (!newTicker) return;
 
         if (!tickers.includes(newTicker)) {
@@ -308,7 +352,7 @@ function initMiddle() {
     $("#add-ticker-form").on("submit", function (e) {
         e.preventDefault();
 
-        const newTicker = $("#new-ticker").val().trim().toUpperCase();
+        const newTicker = normalizeTicker($("#new-ticker").val());
         if (!newTicker) return;
 
         if (!tickers.includes(newTicker)) {
@@ -326,6 +370,9 @@ function initMiddle() {
         tickers = tickers.filter((t) => t !== tickerToRemove);
         localStorage.setItem("tickers", JSON.stringify(tickers));
         $("#" + tickerToRemove).remove();
+        if (!tickers.length) {
+            $("#tickers-grid").append('<div class="empty-state"><b>Build your watchlist</b>Add a stock symbol above to see live pricing and forecasts.</div>');
+        }
     });
 
     $("#tickers-grid").on("click", ".detail", function () {

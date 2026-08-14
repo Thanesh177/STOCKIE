@@ -1,26 +1,2 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Website</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style2.css') }}">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="{{url_for('static', filename='app.js')}}"></script>
-
-</head>
-    <body>
-        <div class="midd">
-            <br><br><br>
-
-            <!-- Form Section -->
-            <form id="add-ticker-form" class="form">
-                <label for="new-ticker"></label>
-                <input type="text" id="new-ticker" placeholder="Add stock" required class="in">
-            </form>
-
-            <!-- Grid Section for Stock Tickers -->
-            <div id="tickers-grid"></div>
-        </div>
-    </body>
-</html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Watchlist — STOCKIE</title><link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}"><script src="https://code.jquery.com/jquery-3.6.0.min.js"></script><script defer src="{{ url_for('static', filename='app.js') }}"></script></head>
+<body><main class="app-shell"><header class="topbar"><a class="brand" href="/"><span class="brand-mark">S</span> STOCKIE</a><span class="status"><i></i>MARKET DATA STREAM ACTIVE</span></header><section class="dashboard"><div class="dashboard-head"><div><div class="eyebrow">Portfolio monitor / 01</div><h1>Watchlist</h1></div><form id="add-ticker-form" class="form"><label class="sr-only" for="new-ticker">Add stock</label><input id="new-ticker" class="in" maxlength="15" autocomplete="off" placeholder="Ticker symbol — AAPL"><button class="add-button" type="submit">Add instrument</button></form></div><div id="tickers-grid"><div class="empty-state"><b>Your terminal is clear</b>Add a ticker symbol to begin monitoring live prices and model forecasts.</div></div></section></main></body></html>
